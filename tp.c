@@ -91,7 +91,7 @@ Empleado newOperario(const char nombre[], int num_id, float salario_base, int pr
     emp.calcularSalario = calcularSalarioOperario; // Asignación del puntero a funcion
     return emp;
 }
-
+//
 
 
 int main()
