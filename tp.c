@@ -4,10 +4,11 @@
 
 #define ADMINISTRATIVO 1
 #define OPERARIO 2
-#define TRY if (1)
+#define TRY if (1) //siempre deben seguir { }
 #define CATCH(error) if (error) // setear error a true manualmente
 
 typedef float (*CalcularSalario)(void *);
+typedef char* (*GetNombre)(void *);
 
 typedef struct
 {
@@ -31,6 +32,7 @@ typedef struct
         Administrativo administrativo_data;
     } extra;
     CalcularSalario calcularSalario;
+    GetNombre getNombre;
 } Empleado;
 
 float calcularSalario(const Empleado *emp)
@@ -61,16 +63,19 @@ float calcularSalarioOperario(void *emp)
     return salarioOperario;
 }
 
+char* getNombre(void* emp)
+{
+    return ((Empleado*)emp)->nombre;
+}
+
 Empleado newEmpleado(const char *nombre, int num_id, float salario_base, int tipo_empleado, int extra)
 {
-    Empleado empty = {"null", -1, -1.0, 0, {0}}, emp;
+    Empleado empty = {"null", -1, -1.0, 0, {0}}, emp = {"", num_id, salario_base, tipo_empleado};
     int error = 0;
     TRY
     {
         strcpy(emp.nombre, nombre);
-        emp.num_id = num_id;
-        emp.salario_base = salario_base;
-        emp.tipo_empleado = tipo_empleado;
+        emp.getNombre = getNombre;
         if (tipo_empleado == ADMINISTRATIVO)
         {
             emp.calcularSalario = calcularSalarioAdministrativo;
@@ -85,11 +90,10 @@ Empleado newEmpleado(const char *nombre, int num_id, float salario_base, int tip
         {
             error = 1;
         }
-    }
-
-    CATCH(error) // if(var)
+    }CATCH(error) // if(var)
     {
         empty.calcularSalario = calcularSalarioOperario; // por defecto
+        empty.getNombre = getNombre;
         return empty;
     }
     return emp;
@@ -120,8 +124,8 @@ int main()
     Empleado admi_1 = newAdministrativo("Juan el Admin", 3, 100, 1000);
     Empleado ope_1 = newOperario("Pedro el Operario", 4, 100, 1000);
 
-    printf("Empleado id: %d Salario de %s: %.2f\n", emp1.num_id, emp1.nombre, emp1.calcularSalario(&emp1)); // la unica manera de simular this.calcularSalario
-    printf("Empleado id: %d Salario de %s: %.2f\n", emp2.num_id, emp2.nombre, emp2.calcularSalario(&emp2));
+    printf("Empleado id: %d Salario de %s: %.2f\n", emp1.num_id, emp1.getNombre(&emp1), emp1.calcularSalario(&emp1)); // la unica manera de simular this.calcularSalario
+    printf("Empleado id: %d Salario de %s: %.2f\n", emp2.num_id, emp2.getNombre(&emp2), emp2.calcularSalario(&emp2));
     printf("Empleado id: %d Salario de %s: %.2f\n", admi_1.num_id, admi_1.nombre, admi_1.calcularSalario(&admi_1)); // la unica manera de simular this.calcularSalario
     printf("Empleado id: %d Salario de %s: %.2f\n", ope_1.num_id, ope_1.nombre, ope_1.calcularSalario(&ope_1));
     return 0;
